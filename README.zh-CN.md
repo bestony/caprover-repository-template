@@ -39,11 +39,11 @@ npm start
 4. 打开 Pages URL，点击 **COPY Repository URL**。
 5. 在 CapRover 中：**Apps → One-Click Apps/Databases → 3rd party repositories**，粘贴 URL 并连接。
 
-默认 Pages 地址是 `https://<owner>.github.io/<repo>/`。如果仓库名是 `<owner>.github.io`，站点会发布在域名根路径。
+默认 Pages 地址是 `https://<owner>.github.io/<repo>/`。如果仓库名是 `<owner>.github.io`，站点会发布在域名根路径。Fork 之后，请把 [`config.js`](config.js) 里的 `url` 改成这个公开地址，这样目录链接、logo 和 Eleventy 的 path prefix 才会和线上站点一致。
 
 ## 自定义商店页面
 
-修改 [`config.js`](config.js) 即可更改发布页面的标题、描述、关键词和规范 URL。Eleventy 在构建时读取该文件，并把 TDK 以及 OpenGraph 标签写入目录页。
+修改 [`config.js`](config.js) 即可更改发布页面的标题、描述、关键词和公开站点 URL。Eleventy 在构建时读取该文件：写入 TDK 和 OpenGraph 标签，并用 `url` 生成目录链接、logo URL 以及 path prefix。
 
 ```js
 module.exports = {
@@ -68,12 +68,14 @@ module.exports = {
 | `title` | 是 | HTML `<title>`、页面主标题和 `og:title` |
 | `description` | 是 | Meta description、页面副标题和 `og:description` |
 | `keywords` | 是 | Meta keywords（非空字符串数组） |
-| `url` | 是 | 未设置 `SITE_URL` 时的规范地址 / `og:url` |
+| `url` | 是 | 公开站点 origin（不要末尾斜杠）。目录链接、logo URL、Eleventy path prefix、规范地址和 `og:url` 都由此生成 |
 | `stylesheet` | 是 | 目录页加载的 Bulma CSS 地址 |
 | `ogType` | 否 | OpenGraph type，默认 `website` |
 | `ogImage` | 否 | OpenGraph 图片 URL；为空时不输出该标签 |
 
-Fork 之后，请把 `url` 改成你自己的 GitHub Pages origin（不要末尾斜杠）。CI 在存在 `SITE_URL` / `PATH_PREFIX` 时仍会优先使用这两个变量。
+Fork 之后，请把 `url` 改成你自己的 GitHub Pages origin（不要末尾斜杠），例如 `https://<owner>.github.io/<repo>`。站点搬家或改用自定义域名时，也改这个字段。
+
+`SITE_URL` 和 `PATH_PREFIX` 仍可作为可选的环境变量覆盖；workflow 不会设置它们。本地 `npm start` 仍在 `/` 预览，避免 path prefix 影响开发服务器。
 
 请把 `stylesheet` 保持为 Bulma 样式表。测试和构建校验都假定目录页基于 Bulma，并包含 TDK 与 OpenGraph 标签。
 
@@ -142,17 +144,10 @@ templates/
 [`.github/workflows/ci.yml`](.github/workflows/ci.yml) 会在 Pull Request、推送到 `main` 以及手动触发时运行：
 
 1. **validate** — `npm run check` 和 `npm run test:code`
-2. **build** — 解析公开的 Pages URL，然后执行 `npm run build` 和 `npm run verify`
+2. **build** — 执行 `npm run build` 和 `npm run verify`，使用 `config.js` 中的 `url`
 3. **deploy** — 仅在 `main` 上，用 `actions/upload-pages-artifact` 上传 `dist/`，再用 `actions/deploy-pages` 发布
 
-自定义域名时可设置以下仓库变量：
-
-| 变量 | 何时设置 |
-| --- | --- |
-| `SITE_URL` | 公开 origin，例如 `https://apps.example.com` |
-| `PATH_PREFIX` | 该 origin 下的路径（站点在域名根路径时用 `/`） |
-
-未设置 `SITE_URL` 时，workflow 会按 GitHub Pages 的 owner/repo 约定推导地址。
+目录链接、logo URL 和 Eleventy 的 path prefix 都来自 `config.js` 的 `url`。workflow 不会设置 `SITE_URL` 或 `PATH_PREFIX`；这两个环境变量只在你需要覆盖默认值时使用。
 
 ## 许可证
 

@@ -39,11 +39,11 @@ To publish:
 4. Open the Pages URL and click **COPY Repository URL**.
 5. In CapRover: **Apps → One-Click Apps/Databases → 3rd party repositories**, paste the URL, and connect.
 
-The default Pages URL is `https://<owner>.github.io/<repo>/`. If the repository is named `<owner>.github.io`, the site is served at the domain root.
+The default Pages URL is `https://<owner>.github.io/<repo>/`. If the repository is named `<owner>.github.io`, the site is served at the domain root. After you fork, set `url` in [`config.js`](config.js) to that published origin so catalog links, logos, and Eleventy's path prefix match the live site.
 
 ## Customize the store page
 
-Edit [`config.js`](config.js) to change the published page title, description, keywords, and canonical URL. Eleventy reads this file at build time and writes TDK plus OpenGraph tags into the catalog page.
+Edit [`config.js`](config.js) to change the published page title, description, keywords, and public site URL. Eleventy reads this file at build time: it writes TDK plus OpenGraph tags, and it uses `url` for catalog links, logo URLs, and the path prefix.
 
 ```js
 module.exports = {
@@ -68,12 +68,14 @@ module.exports = {
 | `title` | yes | HTML `<title>`, hero heading, and `og:title` |
 | `description` | yes | Meta description, hero subtitle, and `og:description` |
 | `keywords` | yes | Meta keywords (array of non-empty strings) |
-| `url` | yes | Fallback canonical / `og:url` when `SITE_URL` is unset |
+| `url` | yes | Public site origin (no trailing slash). Source of catalog links, logo URLs, Eleventy path prefix, canonical URL, and `og:url` |
 | `stylesheet` | yes | Bulma CSS URL loaded by the catalog page |
 | `ogType` | no | OpenGraph type; defaults to `website` |
 | `ogImage` | no | OpenGraph image URL; omitted from HTML when empty |
 
-After you fork the template, set `url` to your published GitHub Pages origin (no trailing slash). CI still prefers `SITE_URL` / `PATH_PREFIX` when those variables are present.
+After you fork the template, set `url` to your published GitHub Pages origin (no trailing slash), for example `https://<owner>.github.io/<repo>`. Change that value again if you move the store or use a custom domain.
+
+`SITE_URL` and `PATH_PREFIX` remain optional environment overrides; the workflow does not set them. Local `npm start` still serves the preview at `/` so path prefixes do not break the dev server.
 
 Keep `stylesheet` pointed at a Bulma stylesheet. Tests and the build verifier expect a Bulma-based catalog with TDK and OpenGraph tags.
 
@@ -142,17 +144,10 @@ The published catalog matches the layout CapRover expects:
 [`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs on pull requests, pushes to `main`, and manual dispatch:
 
 1. **validate** — `npm run check` and `npm run test:code`
-2. **build** — resolve the public Pages URL, then `npm run build` and `npm run verify`
+2. **build** — `npm run build` and `npm run verify`, using `url` from `config.js`
 3. **deploy** — on `main` only, upload `dist/` with `actions/upload-pages-artifact` and publish with `actions/deploy-pages`
 
-Optional repository variables for a custom domain:
-
-| Variable | When to set |
-| --- | --- |
-| `SITE_URL` | Public origin, for example `https://apps.example.com` |
-| `PATH_PREFIX` | Path under that origin (`/` if the site is at the domain root) |
-
-If `SITE_URL` is unset, the workflow derives the URL from the GitHub Pages owner/repo convention.
+Catalog links, logo URLs, and Eleventy's path prefix come from `config.js` `url`. The workflow does not set `SITE_URL` or `PATH_PREFIX`; those remain optional environment overrides if you need them in a custom job.
 
 ## License
 
