@@ -43,24 +43,39 @@ The default Pages URL is `https://<owner>.github.io/<repo>/`. If the repository 
 
 ## Customize the store page
 
-Edit [`config.js`](config.js) to change the published page title and description. Eleventy reads this file at build time; you do not need to edit templates for those two fields.
+Edit [`config.js`](config.js) to change the published page title, description, keywords, and canonical URL. Eleventy reads this file at build time and writes TDK plus OpenGraph tags into the catalog page.
 
 ```js
 module.exports = {
     title: "CapRover Store",
     description:
         "A minimal CapRover one-click app repository. Point CapRover at this site as a third-party one-click repository.",
+    keywords: [
+        "CapRover",
+        "one-click apps",
+        "Docker",
+        "self-hosted",
+        "app repository",
+        "third-party repository",
+    ],
+    url: "https://bestony.github.io/caprover-repository-template",
     stylesheet: "https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css",
 };
 ```
 
-| Field | Used for |
-| --- | --- |
-| `title` | HTML `<title>` and the hero heading |
-| `description` | Meta description and the hero subtitle |
-| `stylesheet` | Bulma CSS URL loaded by the catalog page |
+| Field | Required | Used for |
+| --- | --- | --- |
+| `title` | yes | HTML `<title>`, hero heading, and `og:title` |
+| `description` | yes | Meta description, hero subtitle, and `og:description` |
+| `keywords` | yes | Meta keywords (array of non-empty strings) |
+| `url` | yes | Fallback canonical / `og:url` when `SITE_URL` is unset |
+| `stylesheet` | yes | Bulma CSS URL loaded by the catalog page |
+| `ogType` | no | OpenGraph type; defaults to `website` |
+| `ogImage` | no | OpenGraph image URL; omitted from HTML when empty |
 
-Keep `stylesheet` pointed at a Bulma stylesheet. Tests and the build verifier expect a Bulma-based catalog.
+After you fork the template, set `url` to your published GitHub Pages origin (no trailing slash). CI still prefers `SITE_URL` / `PATH_PREFIX` when those variables are present.
+
+Keep `stylesheet` pointed at a Bulma stylesheet. Tests and the build verifier expect a Bulma-based catalog with TDK and OpenGraph tags.
 
 ## Add an app
 

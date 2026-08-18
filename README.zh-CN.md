@@ -43,24 +43,39 @@ npm start
 
 ## 自定义商店页面
 
-修改 [`config.js`](config.js) 即可更改发布页面的标题和描述。Eleventy 在构建时读取该文件，不必为这两个字段去改模板。
+修改 [`config.js`](config.js) 即可更改发布页面的标题、描述、关键词和规范 URL。Eleventy 在构建时读取该文件，并把 TDK 以及 OpenGraph 标签写入目录页。
 
 ```js
 module.exports = {
     title: "CapRover Store",
     description:
         "A minimal CapRover one-click app repository. Point CapRover at this site as a third-party one-click repository.",
+    keywords: [
+        "CapRover",
+        "one-click apps",
+        "Docker",
+        "self-hosted",
+        "app repository",
+        "third-party repository",
+    ],
+    url: "https://bestony.github.io/caprover-repository-template",
     stylesheet: "https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css",
 };
 ```
 
-| 字段 | 用途 |
-| --- | --- |
-| `title` | HTML `<title>` 和页面主标题 |
-| `description` | Meta description 和页面副标题 |
-| `stylesheet` | 目录页加载的 Bulma CSS 地址 |
+| 字段 | 必填 | 用途 |
+| --- | --- | --- |
+| `title` | 是 | HTML `<title>`、页面主标题和 `og:title` |
+| `description` | 是 | Meta description、页面副标题和 `og:description` |
+| `keywords` | 是 | Meta keywords（非空字符串数组） |
+| `url` | 是 | 未设置 `SITE_URL` 时的规范地址 / `og:url` |
+| `stylesheet` | 是 | 目录页加载的 Bulma CSS 地址 |
+| `ogType` | 否 | OpenGraph type，默认 `website` |
+| `ogImage` | 否 | OpenGraph 图片 URL；为空时不输出该标签 |
 
-请把 `stylesheet` 保持为 Bulma 样式表。测试和构建校验都假定目录页基于 Bulma。
+Fork 之后，请把 `url` 改成你自己的 GitHub Pages origin（不要末尾斜杠）。CI 在存在 `SITE_URL` / `PATH_PREFIX` 时仍会优先使用这两个变量。
+
+请把 `stylesheet` 保持为 Bulma 样式表。测试和构建校验都假定目录页基于 Bulma，并包含 TDK 与 OpenGraph 标签。
 
 ## 添加应用
 
