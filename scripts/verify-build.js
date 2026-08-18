@@ -117,7 +117,7 @@ try {
     if (/<style[\s>]/i.test(catalogHtml)) {
         throw new Error("dist/index.html must not include custom CSS");
     }
-    ["hero is-link", "section", "box", "media"].forEach((className) => {
+    ["hero is-link", "section", "box", "media", "footer"].forEach((className) => {
         if (!catalogHtml.includes(`class="${className}`)) {
             throw new Error(`dist/index.html is missing Bulma class ${className}`);
         }
@@ -131,8 +131,12 @@ try {
     if (catalogHtml.includes("Definition:") || /Logo:\s*</.test(catalogHtml)) {
         throw new Error("dist/index.html should not list per-app Definition or Logo links");
     }
-    if (catalogHtml.includes("Catalog JSON") || /class="footer"/.test(catalogHtml)) {
+    if (catalogHtml.includes("Catalog JSON")) {
         throw new Error("dist/index.html should not include the Catalog JSON footer");
+    }
+    const templateCreditUrl = "https://github.com/bestony/caprover-repository-template";
+    if (!catalogHtml.includes(templateCreditUrl) || !/Credit:/i.test(catalogHtml)) {
+        throw new Error("dist/index.html is missing the template repository credit");
     }
 
     const nojekyll = path.join(DIST_DIR, ".nojekyll");
