@@ -1,5 +1,7 @@
 # CapRover One-Click App Repository Template
 
+English | [简体中文](README.zh-CN.md)
+
 A starter repository for hosting your own [CapRover](https://caprover.com/) third-party One-Click App store.
 
 Fork this repository or clone it locally, add app templates under `templates/`, and publish the generated catalog. CapRover can then connect to the published site as a 3rd-party repository.
