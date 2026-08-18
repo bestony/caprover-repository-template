@@ -1,0 +1,148 @@
+captainVersion: 4
+services:
+    $$cap_appname-db:
+        image: pgvector/pgvector:$$cap_pg_version
+        volumes:
+            - $$cap_appname-db-data:/var/lib/postgresql/data
+        restart: always
+        environment:
+            POSTGRES_DB: $$cap_db_name
+            POSTGRES_USER: $$cap_db_user
+            POSTGRES_PASSWORD: $$cap_db_pass
+        caproverExtra:
+            notExposeAsWebApp: 'true'
+    $$cap_appname-backend:
+        image: ghcr.io/multica-ai/multica-backend:$$cap_multica_version
+        volumes:
+            - $$cap_appname-uploads:/app/data/uploads
+        restart: always
+        depends_on:
+            - $$cap_appname-db
+        environment:
+            DATABASE_URL: postgres://$$cap_db_user:$$cap_db_pass@srv-captain--$$cap_appname-db:5432/$$cap_db_name?sslmode=disable
+            PORT: '8080'
+            APP_ENV: production
+            JWT_SECRET: $$cap_jwt_secret
+            FRONTEND_ORIGIN: https://$$cap_appname.$$cap_root_domain
+            CORS_ALLOWED_ORIGINS: https://$$cap_appname.$$cap_root_domain
+            MULTICA_APP_URL: https://$$cap_appname.$$cap_root_domain
+            MULTICA_PUBLIC_URL: https://$$cap_appname-backend.$$cap_root_domain
+            LOCAL_UPLOAD_DIR: /app/data/uploads
+            ALLOW_SIGNUP: $$cap_allow_signup
+            RESEND_API_KEY: $$cap_resend_api_key
+            RESEND_FROM_EMAIL: $$cap_resend_from_email
+            SMTP_HOST: $$cap_smtp_host
+            SMTP_PORT: $$cap_smtp_port
+            SMTP_USERNAME: $$cap_smtp_user
+            SMTP_PASSWORD: $$cap_smtp_pass
+            SMTP_FROM_EMAIL: $$cap_smtp_from_email
+            MULTICA_TRUSTED_PROXIES: 10.0.0.0/8,172.16.0.0/12,192.168.0.0/16
+            RATE_LIMIT_TRUSTED_PROXIES: 10.0.0.0/8,172.16.0.0/12,192.168.0.0/16
+        caproverExtra:
+            containerHttpPort: '8080'
+            websocketSupport: 'true'
+    $$cap_appname:
+        image: ghcr.io/multica-ai/multica-web:$$cap_multica_version
+        restart: always
+        depends_on:
+            - $$cap_appname-backend
+        environment:
+            HOSTNAME: '0.0.0.0'
+            REMOTE_API_URL: http://srv-captain--$$cap_appname-backend:8080
+        caproverExtra:
+            containerHttpPort: '3000'
+            websocketSupport: 'true'
+caproverOneClickApp:
+    variables:
+        - id: $$cap_multica_version
+          label: Multica Version
+          defaultValue: v0.4.29
+          description: GHCR tag for backend and web images. See https://github.com/multica-ai/multica/pkgs/container/multica-backend
+          validRegex: /^([^\s\/])+$/
+        - id: $$cap_pg_version
+          label: PostgreSQL (pgvector) Version
+          defaultValue: pg17
+          description: Tag from https://hub.docker.com/r/pgvector/pgvector/tags — Multica requires PostgreSQL 17 with pgvector
+          validRegex: /^([^\s\/])+$/
+        - id: $$cap_db_name
+          label: Database Name
+          defaultValue: multica
+          description: PostgreSQL database name
+          validRegex: /^[A-Za-z0-9_]+$/
+        - id: $$cap_db_user
+          label: Database User
+          defaultValue: multica
+          description: PostgreSQL username
+          validRegex: /^[A-Za-z0-9_]+$/
+        - id: $$cap_db_pass
+          label: Database Password
+          defaultValue: $$cap_gen_random_hex(24)
+          description: 'PostgreSQL password. Avoid @, :, /, and spaces so DATABASE_URL stays valid.'
+          validRegex: /^[^\s@:/]{12,}$/
+        - id: $$cap_jwt_secret
+          label: JWT Secret
+          defaultValue: $$cap_gen_random_hex(32)
+          description: Must not use the upstream default. Used to sign session tokens.
+          validRegex: /^[^\s]{16,}$/
+        - id: $$cap_allow_signup
+          label: Allow Signup
+          defaultValue: 'true'
+          description: Set false to block new account creation on a private instance
+          validRegex: /^(true|false)$/
+        - id: $$cap_resend_api_key
+          label: Resend API Key (optional)
+          description: Recommended for email login codes. Leave empty to copy codes from backend logs.
+        - id: $$cap_resend_from_email
+          label: Resend From Email
+          defaultValue: noreply@multica.ai
+          description: Must be a verified Resend sender if RESEND_API_KEY is set
+        - id: $$cap_smtp_host
+          label: SMTP Host (optional)
+          description: If set, SMTP is used instead of Resend
+        - id: $$cap_smtp_port
+          label: SMTP Port
+          defaultValue: '587'
+          description: Common values are 587 (STARTTLS) or 465 (implicit TLS)
+        - id: $$cap_smtp_user
+          label: SMTP Username (optional)
+          description: Leave empty for an unauthenticated relay
+        - id: $$cap_smtp_pass
+          label: SMTP Password (optional)
+          description: SMTP password
+        - id: $$cap_smtp_from_email
+          label: SMTP From Email (optional)
+          description: Envelope sender. Falls back to Resend From Email when empty.
+    instructions:
+        start: >-
+            Multica is a self-hosted control plane for local AI coding agents.
+            This template deploys the official stack: PostgreSQL 17 + pgvector,
+            the Go API/WebSocket backend, and the Next.js web UI.
+
+            After deploy, enable HTTPS on both the web and backend apps.
+            The CLI and agent daemon run on developer machines, not in this stack.
+
+            First backend start can take a few minutes while migrations run.
+        end: >-
+            Multica is deployed.
+
+            Web UI: https://$$cap_appname.$$cap_root_domain
+            API / CLI: https://$$cap_appname-backend.$$cap_root_domain
+            Database (internal): srv-captain--$$cap_appname-db:5432
+
+            Enable HTTPS and keep WebSocket support on for both web apps.
+            If email is not configured, copy the login code from the backend
+            logs (look for "Verification code").
+
+            On each machine that should run agents:
+
+            brew install multica-ai/tap/multica
+            multica setup self-host --server-url https://$$cap_appname-backend.$$cap_root_domain --app-url https://$$cap_appname.$$cap_root_domain
+
+            Browser HTTP calls are proxied by the web app. Real-time /ws is not
+            — if live updates fail, add an nginx location /ws on the web app
+            that proxies to http://srv-captain--$$cap_appname-backend:8080
+            (see https://github.com/multica-ai/multica/blob/main/SELF_HOSTING_ADVANCED.md).
+    displayName: Multica
+    isOfficial: false
+    description: Self-hosted Multica stack — PostgreSQL, API, and web UI for running local AI coding agents
+    documentation: Taken from https://github.com/multica-ai/multica/blob/main/SELF_HOSTING.md

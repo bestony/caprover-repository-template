@@ -1,0 +1,33 @@
+pre-commit:
+    skip:
+        - merge
+        - rebase
+    parallel: true
+    jobs:
+        - name: templates-build
+          glob:
+              - "templates/*"
+              - "templates/**"
+          run: npm run check && npm run build && npm run verify
+
+        - name: site-build
+          glob:
+              - "src/*"
+              - "src/**"
+              - "eleventy.config.js"
+          skip:
+              - run: node scripts/precommit-templates-changed.js
+          run: npm run build && npm run verify
+
+        - name: code
+          glob:
+              - "*.js"
+              - "lib/*"
+              - "lib/**"
+              - "scripts/*"
+              - "scripts/**"
+              - "tests/*"
+              - "tests/**"
+              - "config.js"
+              - "package.json"
+          run: npm run test:code

@@ -1,0 +1,143 @@
+captainVersion: 4
+services:
+    $$cap_appname-db:
+        image: postgres:$$cap_pg_version
+        volumes:
+            - $$cap_appname-db-data:/var/lib/postgresql/data
+        restart: always
+        environment:
+            POSTGRES_DB: $$cap_db_name
+            POSTGRES_USER: $$cap_db_user
+            POSTGRES_PASSWORD: $$cap_db_pass
+        caproverExtra:
+            notExposeAsWebApp: 'true'
+    $$cap_appname-migrate:
+        restart: always
+        depends_on:
+            - $$cap_appname-db
+        environment:
+            DATABASE_URL: postgresql://$$cap_db_user:$$cap_db_pass@srv-captain--$$cap_appname-db:5432/$$cap_db_name
+            BETTER_AUTH_SECRET: $$cap_better_auth_secret
+            BETTER_AUTH_URL: https://$$cap_appname.$$cap_root_domain
+            MCP_OAUTH_ENABLED: $$cap_mcp_oauth_enabled
+            LOG_LEVEL: $$cap_log_level
+        caproverExtra:
+            dockerfileLines:
+                - FROM ghcr.io/bestony/google-health-connector-migration:$$cap_image_tag
+                - CMD ["sh", "-c", "pnpm db:migrate && exec sleep infinity"]
+            notExposeAsWebApp: 'true'
+    $$cap_appname:
+        image: ghcr.io/bestony/google-health-connector:$$cap_image_tag
+        restart: always
+        depends_on:
+            - $$cap_appname-db
+            - $$cap_appname-migrate
+        environment:
+            DATABASE_URL: postgresql://$$cap_db_user:$$cap_db_pass@srv-captain--$$cap_appname-db:5432/$$cap_db_name
+            BETTER_AUTH_SECRET: $$cap_better_auth_secret
+            BETTER_AUTH_URL: https://$$cap_appname.$$cap_root_domain
+            MCP_OAUTH_ENABLED: $$cap_mcp_oauth_enabled
+            GOOGLE_CLIENT_ID: $$cap_google_client_id
+            GOOGLE_CLIENT_SECRET: $$cap_google_client_secret
+            LOG_LEVEL: $$cap_log_level
+            NODE_ENV: production
+            NITRO_HOST: 0.0.0.0
+            NITRO_PORT: '3000'
+        caproverExtra:
+            containerHttpPort: '3000'
+caproverOneClickApp:
+    variables:
+        - id: $$cap_image_tag
+          label: Image Tag
+          defaultValue: latest
+          description: GHCR tag for both the app and migration images. Use latest for a trial, or pin both to the same sha-<commit> tag for production.
+          validRegex: /^([^\s\/])+$/
+        - id: $$cap_pg_version
+          label: PostgreSQL Version
+          defaultValue: 17-alpine
+          description: Tag from https://hub.docker.com/_/postgres/tags — the official Compose file uses PostgreSQL 17
+          validRegex: /^([^\s\/])+$/
+        - id: $$cap_db_name
+          label: Database Name
+          defaultValue: google_health_connector
+          description: PostgreSQL database name
+          validRegex: /^[A-Za-z0-9_]+$/
+        - id: $$cap_db_user
+          label: Database User
+          defaultValue: google_health_connector
+          description: PostgreSQL username
+          validRegex: /^[A-Za-z0-9_]+$/
+        - id: $$cap_db_pass
+          label: Database Password
+          defaultValue: $$cap_gen_random_hex(24)
+          description: 'URL-safe password. Avoid @, :, /, ?, #, and % so DATABASE_URL stays valid.'
+          validRegex: /^[^\s@:/?#%]{12,}$/
+        - id: $$cap_better_auth_secret
+          label: Better Auth Secret
+          defaultValue: $$cap_gen_random_hex(64)
+          description: Signs sessions and encrypts Google tokens. Treat as immutable per environment. Rotating it is a planned auth outage.
+          validRegex: /^[^\s]{16,}$/
+        - id: $$cap_mcp_oauth_enabled
+          label: Enable MCP OAuth
+          defaultValue: 'false'
+          description: Keep false until discovery routes and clients are ready. Email or API-key MCP access still works when this is false.
+          validRegex: /^(true|false)$/
+        - id: $$cap_google_client_id
+          label: Google Client ID (optional)
+          description: Leave empty for email/password only. When set, also set the client secret and register the CapRover HTTPS origin in Google Cloud.
+        - id: $$cap_google_client_secret
+          label: Google Client Secret (optional)
+          description: Set together with Google Client ID. Leave both empty to hide Google sign-in.
+        - id: $$cap_log_level
+          label: Log Level
+          defaultValue: info
+          description: Server log verbosity. Use debug only while investigating.
+          validRegex: /^(debug|info|warn|error)$/
+    instructions:
+        start: >-
+            GHealth Connector turns a Google Health account into an MCP endpoint.
+            A user signs in, grants health scopes, then clients call POST /mcp.
+            The server reads Google Health live and does not store a copy of the records.
+
+            This template follows the official PostgreSQL Compose stack: PostgreSQL 17,
+            a one-shot migration image, and the Nitro Node app on port 3000.
+
+            Enable HTTPS on the web app after deploy. BETTER_AUTH_URL is set to that
+            public origin (no path, no trailing slash). If you use Google sign-in,
+            register these in Google Cloud before filling the client fields:
+
+            Authorized JavaScript origin: https://YOUR_APP.YOUR_ROOT_DOMAIN
+            Authorized redirect URI: https://YOUR_APP.YOUR_ROOT_DOMAIN/api/auth/callback/google
+
+            Also enable the Google Health API and declare every Health scope on the
+            OAuth consent screen. Unverified projects can only use listed test users.
+
+            First start can take a minute while PostgreSQL and migrations finish.
+        end: >-
+            GHealth Connector is deployed.
+
+            Site: https://$$cap_appname.$$cap_root_domain
+            MCP: https://$$cap_appname.$$cap_root_domain/mcp
+            Privacy: https://$$cap_appname.$$cap_root_domain/privacy
+            Terms: https://$$cap_appname.$$cap_root_domain/terms
+            Database (internal): srv-captain--$$cap_appname-db:5432
+
+            Enable HTTPS. If the site errors on first boot, wait for the migrate app
+            to finish (it then sleeps) and restart the web app.
+
+            Sign in, open /dashboard, authorize Google Health, then issue an API key
+            or approve an MCP OAuth client.
+
+            OAuth-capable MCP client:
+            claude mcp add --transport http ghealth https://$$cap_appname.$$cap_root_domain/mcp
+
+            API-key client:
+            claude mcp add --transport http ghealth https://$$cap_appname.$$cap_root_domain/mcp --header "Authorization: Bearer $GHEALTH_API_KEY"
+
+            Google callback must be exactly
+            https://$$cap_appname.$$cap_root_domain/api/auth/callback/google
+            See https://github.com/bestony/google-health-connector/blob/main/deployment/google-oauth.md
+    displayName: GHealth Connector
+    isOfficial: true
+    description: Turn a Google Health account into an MCP endpoint. Sign in, grant scopes, then clients call POST /mcp.
+    documentation: Taken from https://github.com/bestony/google-health-connector/blob/main/deployment/README.md

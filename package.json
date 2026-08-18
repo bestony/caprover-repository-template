@@ -1,0 +1,38 @@
+{
+  "name": "caprover-store",
+  "version": "1.0.0",
+  "description": "Minimal CapRover one-click app store generated with Eleventy",
+  "main": "eleventy.config.js",
+  "scripts": {
+    "start": "eleventy --serve",
+    "build": "eleventy",
+    "build:ghpages": "eleventy",
+    "check": "node scripts/check-templates.js",
+    "check:syntax": "node scripts/check-syntax.js",
+    "validate": "node scripts/check-templates.js",
+    "verify": "node scripts/verify-build.js",
+    "test:code": "node scripts/check-syntax.js && node tests/templates.test.js && node tests/check-templates.test.js && node tests/site-config.test.js && node tests/precommit.test.js",
+    "test": "npm run test:code && node scripts/check-templates.js && eleventy && node scripts/verify-build.js",
+    "prepare": "lefthook install"
+  },
+  "keywords": [
+    "caprover",
+    "one-click-apps",
+    "eleventy"
+  ],
+  "author": "",
+  "license": "Apache-2.0",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@11ty/eleventy": "^3.1.6",
+    "@iarna/toml": "^2.2.5",
+    "js-yaml": "^4.3.1",
+    "sharp": "^0.35.3"
+  },
+  "devDependencies": {
+    "lefthook": "^2.1.10"
+  }
+}
