@@ -10,6 +10,12 @@
 
 官方文档见：[One-Click Apps](https://caprover.com/docs/one-click-apps.html) 以及 [官方应用仓库](https://github.com/caprover/one-click-apps)。
 
+## 线上示例
+
+基于本模板发布的商店：[bestony.github.io/caprover-repository](https://bestony.github.io/caprover-repository/)。
+
+[![目录页预览](docs/catalog.png)](https://bestony.github.io/caprover-repository/)
+
 ## 特性
 
 - **预置目录 UI** — 基于 Bulma 的落地页，列出全部应用，并提供 **COPY Repository URL** 按钮，方便填入 CapRover

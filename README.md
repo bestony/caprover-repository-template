@@ -10,6 +10,12 @@ The catalog is a static site built with [Eleventy](https://www.11ty.dev/) and [B
 
 See the official CapRover docs: [One-Click Apps](https://caprover.com/docs/one-click-apps.html) and the [official app repository](https://github.com/caprover/one-click-apps).
 
+## Example
+
+A live store built from this template: [bestony.github.io/caprover-repository](https://bestony.github.io/caprover-repository/).
+
+[![Catalog preview](docs/catalog.png)](https://bestony.github.io/caprover-repository/)
+
 ## Features
 
 - **Preset catalog UI** — a Bulma landing page that lists every app and includes a **COPY Repository URL** button for CapRover
