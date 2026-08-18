@@ -53,16 +53,42 @@ try {
     }
 
     const catalogHtml = fs.readFileSync(catalogPage, "utf8");
-    logger.debug("verify", "checking catalog page copy and Bulma markup", {
+    const site = require("../src/_data/site")();
+    logger.debug("verify", "checking catalog page copy, TDK, OpenGraph, and Bulma markup", {
         title: storeConfig.title,
         description: storeConfig.description,
+        keywords: site.keywords,
         stylesheet: storeConfig.stylesheet,
+        ogType: site.ogType,
+        ogUrl: site.url,
+        hasOgImage: Boolean(site.ogImage),
     });
     if (!catalogHtml.includes(storeConfig.title)) {
         throw new Error("dist/index.html is missing config.js title");
     }
     if (!catalogHtml.includes(storeConfig.description)) {
         throw new Error("dist/index.html is missing config.js description");
+    }
+    if (!catalogHtml.includes(`name="keywords"`) || !catalogHtml.includes(site.keywords)) {
+        throw new Error("dist/index.html is missing TDK keywords from config.js");
+    }
+    if (!catalogHtml.includes(`property="og:title"`) || !catalogHtml.includes(site.title)) {
+        throw new Error("dist/index.html is missing OpenGraph title");
+    }
+    if (!catalogHtml.includes(`property="og:description"`) || !catalogHtml.includes(site.description)) {
+        throw new Error("dist/index.html is missing OpenGraph description");
+    }
+    if (!catalogHtml.includes(`property="og:type"`) || !catalogHtml.includes(site.ogType)) {
+        throw new Error("dist/index.html is missing OpenGraph type");
+    }
+    if (!catalogHtml.includes(`property="og:site_name"`)) {
+        throw new Error("dist/index.html is missing OpenGraph site_name");
+    }
+    if (site.url && !catalogHtml.includes(`property="og:url"`)) {
+        throw new Error("dist/index.html is missing OpenGraph url");
+    }
+    if (site.ogImage && !catalogHtml.includes(`property="og:image"`)) {
+        throw new Error("dist/index.html is missing OpenGraph image");
     }
     if (!catalogHtml.includes(storeConfig.stylesheet)) {
         throw new Error("dist/index.html is missing the Bulma stylesheet from config.js");

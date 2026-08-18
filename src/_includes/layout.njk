@@ -3,8 +3,27 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ title or site.title }}</title>
-    <meta name="description" content="{{ description or site.description }}">
+    {%- set pageTitle = title or site.title -%}
+    {%- set pageDescription = description or site.description -%}
+    {%- set pageKeywords = keywords or site.keywords -%}
+    {%- set pageOgTitle = ogTitle or pageTitle -%}
+    {%- set pageOgDescription = ogDescription or pageDescription -%}
+    {%- set pageOgType = ogType or site.ogType -%}
+    {%- set pageOgUrl = ogUrl or site.url -%}
+    {%- set pageOgImage = ogImage or site.ogImage %}
+    <title>{{ pageTitle }}</title>
+    <meta name="description" content="{{ pageDescription }}">
+    <meta name="keywords" content="{{ pageKeywords }}">
+    <meta property="og:title" content="{{ pageOgTitle }}">
+    <meta property="og:description" content="{{ pageOgDescription }}">
+    <meta property="og:type" content="{{ pageOgType }}">
+    <meta property="og:site_name" content="{{ site.title }}">
+    {%- if pageOgUrl %}
+    <meta property="og:url" content="{{ pageOgUrl }}">
+    {%- endif %}
+    {%- if pageOgImage %}
+    <meta property="og:image" content="{{ pageOgImage }}">
+    {%- endif %}
     <link rel="stylesheet" href="{{ site.stylesheet }}">
 </head>
 <body>
