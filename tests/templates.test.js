@@ -8,6 +8,7 @@ const {
     rewriteStoreUrls,
     toCatalog,
 } = require("../lib/apps");
+const storeConfig = require("../config");
 const logger = require("../lib/logger");
 
 function writeFile(filePath, contents) {
@@ -111,6 +112,19 @@ try {
     assert.strictEqual(
         prefixedApps[0].logoPath,
         "/caprover-repository/v4/logos/mysql.png"
+    );
+
+    const configuredApps = loadApps({
+        templatesDir: tmpRoot,
+    });
+    const configuredBaseUrl = storeConfig.url.replace(/\/+$/, "");
+    assert.strictEqual(
+        configuredApps[0].logoPath,
+        `${configuredBaseUrl}/v4/logos/mysql.png`
+    );
+    assert.strictEqual(
+        configuredApps[0].definition.caproverOneClickApp.documentation,
+        `Taken from ${configuredBaseUrl}`
     );
 
     const tomlSource = [

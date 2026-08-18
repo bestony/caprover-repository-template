@@ -5,6 +5,11 @@ const { publishLogos } = require("./lib/logos");
 const logger = require("./lib/logger");
 
 function eleventyPathPrefix() {
+    const runMode = process.env.ELEVENTY_RUN_MODE;
+    if (runMode === "serve" || runMode === "watch") {
+        logger.debug("eleventy", "local preview uses root path prefix", { runMode });
+        return "/";
+    }
     const prefix = storePathPrefix();
     return prefix ? `${prefix}/` : "/";
 }

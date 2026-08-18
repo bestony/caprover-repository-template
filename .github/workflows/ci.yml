@@ -47,35 +47,11 @@ jobs:
                   node-version: 20
                   cache: npm
 
-            - name: Resolve GitHub Pages URL
-              env:
-                  CUSTOM_SITE_URL: ${{ vars.SITE_URL }}
-                  CUSTOM_PATH_PREFIX: ${{ vars.PATH_PREFIX }}
-              run: |
-                  set -eu
-                  OWNER="${GITHUB_REPOSITORY_OWNER}"
-                  REPO="${GITHUB_REPOSITORY#*/}"
-                  if [ -n "${CUSTOM_SITE_URL}" ]; then
-                      SITE_URL="${CUSTOM_SITE_URL%/}"
-                      PATH_PREFIX="${CUSTOM_PATH_PREFIX:-/}"
-                  elif [ "${REPO}" = "${OWNER}.github.io" ]; then
-                      SITE_URL="https://${OWNER}.github.io"
-                      PATH_PREFIX="/"
-                  else
-                      SITE_URL="https://${OWNER}.github.io/${REPO}"
-                      PATH_PREFIX="/${REPO}/"
-                  fi
-                  echo "SITE_URL=${SITE_URL}" >> "${GITHUB_ENV}"
-                  echo "PATH_PREFIX=${PATH_PREFIX}" >> "${GITHUB_ENV}"
-                  echo "Resolved GitHub Pages SITE_URL=${SITE_URL} PATH_PREFIX=${PATH_PREFIX}"
-
             - run: npm ci
 
             - name: Build and verify catalog
               run: npm run build && npm run verify
               env:
-                  SITE_URL: ${{ env.SITE_URL }}
-                  PATH_PREFIX: ${{ env.PATH_PREFIX }}
                   LOG_LEVEL: info
 
             - if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')

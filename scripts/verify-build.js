@@ -6,6 +6,19 @@ const storeConfig = require("../config");
 
 const DIST_DIR = path.join(__dirname, "..", "dist");
 
+function escapeHtml(value) {
+    return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+}
+
+function htmlContains(html, value) {
+    return html.includes(value) || html.includes(escapeHtml(value));
+}
+
 function readJson(filePath) {
     logger.debug("verify", "reading json output", { filePath });
     if (!fs.existsSync(filePath)) {
@@ -63,19 +76,19 @@ try {
         ogUrl: site.url,
         hasOgImage: Boolean(site.ogImage),
     });
-    if (!catalogHtml.includes(storeConfig.title)) {
+    if (!htmlContains(catalogHtml, storeConfig.title)) {
         throw new Error("dist/index.html is missing config.js title");
     }
-    if (!catalogHtml.includes(storeConfig.description)) {
+    if (!htmlContains(catalogHtml, storeConfig.description)) {
         throw new Error("dist/index.html is missing config.js description");
     }
-    if (!catalogHtml.includes(`name="keywords"`) || !catalogHtml.includes(site.keywords)) {
+    if (!catalogHtml.includes(`name="keywords"`) || !htmlContains(catalogHtml, site.keywords)) {
         throw new Error("dist/index.html is missing TDK keywords from config.js");
     }
-    if (!catalogHtml.includes(`property="og:title"`) || !catalogHtml.includes(site.title)) {
+    if (!catalogHtml.includes(`property="og:title"`) || !htmlContains(catalogHtml, site.title)) {
         throw new Error("dist/index.html is missing OpenGraph title");
     }
-    if (!catalogHtml.includes(`property="og:description"`) || !catalogHtml.includes(site.description)) {
+    if (!catalogHtml.includes(`property="og:description"`) || !htmlContains(catalogHtml, site.description)) {
         throw new Error("dist/index.html is missing OpenGraph description");
     }
     if (!catalogHtml.includes(`property="og:type"`) || !catalogHtml.includes(site.ogType)) {
@@ -84,9 +97,17 @@ try {
     if (!catalogHtml.includes(`property="og:site_name"`)) {
         throw new Error("dist/index.html is missing OpenGraph site_name");
     }
-    if (site.url && !catalogHtml.includes(`property="og:url"`)) {
-        throw new Error("dist/index.html is missing OpenGraph url");
+    if (!site.url || !catalogHtml.includes(`property="og:url"`) || !catalogHtml.includes(site.url)) {
+        throw new Error("dist/index.html is missing OpenGraph url from config.js");
     }
+    apps.forEach((app) => {
+        if (!app.logoPath.startsWith(`${site.url}/`)) {
+            throw new Error(`${app.name} logoPath does not use the published site url`);
+        }
+        if (!catalogHtml.includes(app.logoPath)) {
+            throw new Error(`dist/index.html is missing logo url for ${app.name}`);
+        }
+    });
     if (site.ogImage && !catalogHtml.includes(`property="og:image"`)) {
         throw new Error("dist/index.html is missing OpenGraph image");
     }
