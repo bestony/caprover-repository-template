@@ -25,8 +25,17 @@
     <meta property="og:image" content="{{ pageOgImage }}">
     {%- endif %}
     <link rel="stylesheet" href="{{ site.stylesheet }}">
+    <link rel="stylesheet" href="{{ '/assets/github-fork-ribbon.css' | url }}">
 </head>
 <body>
+    <a
+        class="github-fork-ribbon fixed"
+        href="{{ site.repositoryUrl }}"
+        data-ribbon="{{ site.ribbonText }}"
+        title="{{ site.ribbonText }}"
+    >
+        {{ site.ribbonText }}
+    </a>
     {{ content | safe }}
 </body>
 </html>

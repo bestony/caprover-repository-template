@@ -35,6 +35,14 @@ assert.ok(
 );
 assert.strictEqual(typeof storeConfig.url, "string");
 assert.match(storeConfig.url, /^https?:\/\//, "config.js url must be an absolute http(s) URL");
+assert.strictEqual(typeof storeConfig.repositoryUrl, "string");
+assert.match(
+    storeConfig.repositoryUrl,
+    /^https?:\/\//,
+    "config.js repositoryUrl must be an absolute http(s) URL"
+);
+assert.strictEqual(typeof storeConfig.ribbonText, "string");
+assert.ok(storeConfig.ribbonText.trim(), "config.js ribbonText must be non-empty");
 assert.strictEqual(typeof storeConfig.stylesheet, "string");
 assert.match(
     storeConfig.stylesheet,
@@ -71,6 +79,8 @@ assert.strictEqual(site.description, storeConfig.description);
 assert.strictEqual(site.keywords, storeConfig.keywords.join(", "));
 assert.strictEqual(site.stylesheet, storeConfig.stylesheet);
 assert.strictEqual(site.url, expectedUrl);
+assert.strictEqual(site.repositoryUrl, storeConfig.repositoryUrl);
+assert.strictEqual(site.ribbonText, storeConfig.ribbonText);
 assert.strictEqual(site.ogType, storeConfig.ogType || "website");
 assert.strictEqual(site.ogImage, storeConfig.ogImage || "");
 
@@ -80,6 +90,8 @@ logger.info("test", "site data is loaded from root config.js", {
     keywords: site.keywords,
     stylesheet: storeConfig.stylesheet,
     url: site.url,
+    repositoryUrl: site.repositoryUrl,
+    ribbonText: site.ribbonText,
     pathPrefix: expectedPrefix,
     ogType: site.ogType,
 });

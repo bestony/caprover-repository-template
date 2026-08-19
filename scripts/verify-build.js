@@ -114,6 +114,19 @@ try {
     if (!catalogHtml.includes(storeConfig.stylesheet)) {
         throw new Error("dist/index.html is missing the Bulma stylesheet from config.js");
     }
+    const ribbonStylesheet = path.join(DIST_DIR, "assets", "github-fork-ribbon.css");
+    if (!fs.existsSync(ribbonStylesheet)) {
+        throw new Error(`Missing ribbon stylesheet: ${ribbonStylesheet}`);
+    }
+    if (!catalogHtml.includes("github-fork-ribbon.css")) {
+        throw new Error("dist/index.html is missing the GitHub ribbon stylesheet link");
+    }
+    if (!htmlContains(catalogHtml, storeConfig.repositoryUrl)) {
+        throw new Error("dist/index.html is missing the ribbon repository URL from config.js");
+    }
+    if (!htmlContains(catalogHtml, storeConfig.ribbonText)) {
+        throw new Error("dist/index.html is missing the ribbon text from config.js");
+    }
     if (/<style[\s>]/i.test(catalogHtml)) {
         throw new Error("dist/index.html must not include custom CSS");
     }

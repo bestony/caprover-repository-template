@@ -25,6 +25,10 @@ module.exports = function siteData() {
     const keywords = normalizeKeywords(storeConfig.keywords);
     const stylesheet = storeConfig.stylesheet;
     const url = publishedBaseUrl();
+    const repositoryUrl = nonEmptyString(storeConfig.repositoryUrl)
+        ? storeConfig.repositoryUrl.trim()
+        : "";
+    const ribbonText = nonEmptyString(storeConfig.ribbonText) ? storeConfig.ribbonText.trim() : "";
     const ogType = nonEmptyString(storeConfig.ogType) ? storeConfig.ogType.trim() : "website";
     const ogImage = nonEmptyString(storeConfig.ogImage) ? storeConfig.ogImage.trim() : "";
 
@@ -34,6 +38,8 @@ module.exports = function siteData() {
         keywords,
         stylesheet,
         url,
+        repositoryUrl,
+        ribbonText,
         ogType,
         hasOgImage: Boolean(ogImage),
     });
@@ -43,7 +49,9 @@ module.exports = function siteData() {
         !nonEmptyString(description) ||
         !nonEmptyString(keywords) ||
         !nonEmptyString(stylesheet) ||
-        !nonEmptyString(url)
+        !nonEmptyString(url) ||
+        !nonEmptyString(repositoryUrl) ||
+        !nonEmptyString(ribbonText)
     ) {
         logger.error("eleventy", "root config.js is missing required fields", {
             title,
@@ -51,9 +59,11 @@ module.exports = function siteData() {
             keywords,
             stylesheet,
             url,
+            repositoryUrl,
+            ribbonText,
         });
         throw new Error(
-            "config.js must export non-empty title, description, keywords, stylesheet, and url"
+            "config.js must export non-empty title, description, keywords, stylesheet, url, repositoryUrl, and ribbonText"
         );
     }
 
@@ -63,6 +73,8 @@ module.exports = function siteData() {
         keywords,
         stylesheet,
         url,
+        repositoryUrl,
+        ribbonText,
         ogType,
         ogImage,
     };

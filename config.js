@@ -11,5 +11,7 @@ module.exports = {
         "third-party repository",
     ],
     url: "https://bestony.github.io/caprover-repository-template",
+    repositoryUrl: "https://github.com/bestony/caprover-repository-template",
+    ribbonText: "Request More App on GitHub",
     stylesheet: "https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css",
 };
