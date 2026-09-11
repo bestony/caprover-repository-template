@@ -30,7 +30,7 @@
     "@11ty/eleventy": "^3.1.6",
     "@iarna/toml": "^2.2.5",
     "js-yaml": "^4.3.1",
-    "sharp": "^0.35.3"
+    "sharp": "^0.35.4"
   },
   "devDependencies": {
     "lefthook": "^2.1.10"
